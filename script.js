@@ -1,4 +1,4 @@
-const targetTime = new Date("2026-08-08T13:55:00+03:00").getTime();
+const targetTime = new Date("2026-08-09T13:55:00+03:00").getTime();
 const callsigns = ["TK8810", "THY8810"];
 
 const timeParts = {
