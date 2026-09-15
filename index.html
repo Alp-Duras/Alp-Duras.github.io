@@ -1,77 +1,42 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>See You Soon</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Playfair+Display:wght@700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="page-shell">
-      <section class="countdown-section" aria-labelledby="main-title">
-        <div class="heart-field" aria-hidden="true">
-          <span class="floating-heart heart-one"></span>
-          <span class="floating-heart heart-two"></span>
-          <span class="floating-heart heart-three"></span>
-          <span class="floating-heart heart-four"></span>
-          <span class="floating-heart heart-five"></span>
-          <span class="floating-heart heart-six"></span>
-        </div>
-
-        <p class="eyebrow">August 8, 2026 - 13:55 Istanbul</p>
-        <h1 id="main-title">I love you, see you soon.</h1>
-
-        <div class="countdown" aria-live="polite">
-          <div class="time-box">
-            <span id="days">00</span>
-            <small>Days</small>
-          </div>
-          <div class="time-box">
-            <span id="hours">00</span>
-            <small>Hours</small>
-          </div>
-          <div class="time-box">
-            <span id="minutes">00</span>
-            <small>Minutes</small>
-          </div>
-          <div class="time-box">
-            <span id="seconds">00</span>
-            <small>Seconds</small>
-          </div>
-        </div>
-
-        <a class="photo-heart-button" href="src/image.png" target="_blank" rel="noopener" aria-label="Open our photo">
-          <span>Open photo</span>
-        </a>
-      </section>
-
-      <section class="flight-panel" aria-labelledby="flight-title">
-        <div>
-          <p class="eyebrow">Flight watch</p>
-          <h2 id="flight-title">TK8810</h2>
-          <p class="flight-date">Taking off August 8, 2026</p>
-        </div>
-
-        <div class="flight-status">
-          <span class="status-dot" id="flight-dot"></span>
-          <p id="flight-message">Looking for live flight data...</p>
-        </div>
-
-        <div id="flight-details" class="flight-details" hidden></div>
-
-        <div class="flight-actions">
-          <a href="https://www.flightradar24.com/data/flights/tk8810" target="_blank" rel="noopener">Flightradar24</a>
-          <a href="https://flightaware.com/live/flight/THY8810" target="_blank" rel="noopener">FlightAware</a>
-        </div>
-      </section>
-    </main>
-
-    <script src="script.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#141119" />
+  <title>Under the Same Moon · See You Soon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="night-sky" aria-hidden="true"><div class="moon"></div><span class="bat bat-one"></span><span class="bat bat-two"></span><span class="bat bat-three"></span><div class="hills"></div></div>
+  <div class="surprise" aria-hidden="true"><div class="surprise-photo"><img src="src/image2.png" alt="" /><span>Boo! Miss you. ♡</span></div></div>
+  <main class="page-shell">
+    <header class="site-header"><a href="#main-title" class="wordmark">☾ &nbsp; Under the same moon</a></header>
+    <section class="countdown-section" aria-labelledby="main-title">
+      <p class="eyebrow"><span></span> Our next chapter · October 10</p>
+      <h1 id="main-title">Every little <em>boo,</em><br />brings me closer <i>to you.</i></h1>
+      <p class="intro">The nights are getting colder.<br class="mobile-break" /> The thought of you still keeps me warm.</p>
+      <div class="countdown" role="timer" aria-label="Time until we are together">
+        <div class="time-box"><span id="days">00</span><small>Days</small></div><b aria-hidden="true">:</b>
+        <div class="time-box"><span id="hours">00</span><small>Hours</small></div><b aria-hidden="true">:</b>
+        <div class="time-box"><span id="minutes">00</span><small>Minutes</small></div><b aria-hidden="true">:</b>
+        <div class="time-box"><span id="seconds">00</span><small>Seconds</small></div>
+      </div>
+      <p class="reunion-date"><span>✦</span> <time datetime="2026-10-10T11:00:00-03:00">October 10, 2026 · 11:00 AM · Halifax</time> <span>✦</span></p>
+      <p id="reunion-message" class="love-note" aria-live="polite">I love you. See you so very soon.</p>
+      <a class="photo-button" href="src/image.png" target="_blank" rel="noopener"><span>♡</span> A little reminder of us <span>↗</span></a>
+    </section>
+    <section class="bottom-row" aria-label="A note and flight information">
+      <div class="season-note"><span class="little-ghost" aria-hidden="true"><i></i></span><div><p>You're my favorite boo.</p><small>Across the miles. Through every season.</small></div></div>
+      <section class="flight-panel" aria-labelledby="flight-title"><div class="flight-heading"><span aria-hidden="true">✈</span><div><p class="eyebrow">The journey back to you</p><h2 id="flight-title">Flight <span>F8 652</span></h2></div></div></section>
+    </section>
+    <footer><span>Made of moonlight & missing you</span><span>October, come a little quicker. ♡</span></footer>
+  </main>
+  <div class="pumpkin-patch" aria-hidden="true"><div class="pumpkin"><i></i><b></b></div><div class="pumpkin small"><i></i><b></b></div><div class="grass"></div></div>
+  <script src="script.js"></script>
+</body>
 </html>
+
