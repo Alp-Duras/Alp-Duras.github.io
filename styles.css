@@ -231,6 +231,8 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
   50% { transform: translateX(calc(var(--s) * 2)); }
 }
 
+.fireplace { position: absolute; z-index: 2; pointer-events: none; }
+
 .mug { position: absolute; z-index: 5; pointer-events: none; }
 
 .fx { position: fixed; inset: 0 auto auto 0; z-index: 6; pointer-events: none; }

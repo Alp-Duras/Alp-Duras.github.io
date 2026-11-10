@@ -25,7 +25,7 @@
     signLights: $('sign-lights'), holly: $('sign-holly'), display: $('display'), finale: $('finale'),
     days: $('days'), hours: $('hours'), minutes: $('minutes'), seconds: $('seconds'),
     tree: $('tree'), treeCanvas: $('tree-canvas'), sparkles: $('sparkles'), ornament: $('ornament'),
-    ornamentCanvas: $('ornament-canvas'), hint: $('hint'), arrow: $('arrow-canvas'), mug: $('mug'),
+    ornamentCanvas: $('ornament-canvas'), hint: $('hint'), fire: $('fireplace'), arrow: $('arrow-canvas'), mug: $('mug'),
     fx: $('fx'), dialog: $('surprise'), close: $('gift-close')
   };
 
@@ -316,6 +316,81 @@
     return b.toCanvas();
   }
 
+  // ---- Fireplace ----
+  const FW = 84, FH = 72, MANTEL_Y = 10;
+  const FB = { x: 22, y: 27, w: 40, h: 39 };      // firebox opening
+  const FIRE_BASE = 59;
+  function inFirebox(x, y) {
+    if (x < FB.x || x >= FB.x + FB.w || y < FB.y || y >= FB.y + FB.h) return false;
+    const dx = (x + 0.5 - (FB.x + FB.w / 2)) / (FB.w / 2);
+    return y >= FB.y + 8 - 8 * Math.sqrt(Math.max(0, 1 - dx * dx));
+  }
+  function buildFireplace() {
+    const b = new Buf(FW, FH);
+    // stone surround
+    const stones = ['#6f5a80', '#7b6690', '#655175', '#735e86'];
+    for (let y = 14; y < 66; y++) {
+      const row = Math.floor((y - 14) / 6), off = (row % 2) * 6;
+      for (let x = 5; x < 79; x++) {
+        const bx = Math.floor((x + off) / 12);
+        const mortar = (y - 14) % 6 === 5 || (x + off) % 12 === 11;
+        let c = mortar ? '#4a3a5c' : stones[(bx * 7 + row * 3) % 4];
+        if (!mortar && (y - 14) % 6 === 0) c = mix(c, '#ffffff', 0.14);
+        b.set(x, y, c);
+      }
+    }
+    // arch trim and the dark firebox with soot-dark bricks
+    for (let y = FB.y - 2; y < FB.y + FB.h; y++) for (let x = FB.x - 2; x < FB.x + FB.w + 2; x++) {
+      if (inFirebox(x, y)) continue;
+      const near = inFirebox(x + 1, y) || inFirebox(x - 1, y) || inFirebox(x, y + 1) || inFirebox(x + 2, y) || inFirebox(x - 2, y) || inFirebox(x, y + 2);
+      if (near) b.set(x, y, '#9a86ad');
+    }
+    for (let y = FB.y; y < FB.y + FB.h; y++) for (let x = FB.x; x < FB.x + FB.w; x++) {
+      if (!inFirebox(x, y)) continue;
+      const brickRow = Math.floor((y - FB.y) / 4), off = (brickRow % 2) * 4;
+      let c = ((y - FB.y) % 4 === 3 || (x + off) % 8 === 7) ? '#160812' : '#2a1020';
+      if (x < FB.x + 3 || x > FB.x + FB.w - 4) c = '#12060f';
+      b.set(x, y, c);
+    }
+    // grate and back log
+    b.rect(FB.x + 4, 62, FB.w - 8, 1, '#3a3044');
+    b.rect(FB.x + 6, 63, 1, 3, '#3a3044'); b.rect(FB.x + FB.w - 7, 63, 1, 3, '#3a3044');
+    b.rect(FB.x + 9, 56, 22, 3, '#5b3428'); b.rect(FB.x + 9, 56, 22, 1, '#7a4a32');
+    // hearth
+    b.rect(0, 66, FW, 6, '#8a7698');
+    b.rect(0, 66, FW, 1, '#a493b3');
+    b.rect(0, 70, FW, 2, '#6a5578');
+    for (let x = 13; x < FW; x += 14) b.rect(x, 67, 1, 3, '#5a4868');
+    // mantel shelf and corbels
+    b.rect(0, MANTEL_Y, FW, 1, '#a8694a');
+    b.rect(0, MANTEL_Y + 1, FW, 2, '#7a4630');
+    b.rect(0, MANTEL_Y + 3, FW, 1, '#5e3322');
+    [[3, 0], [76, 1]].forEach(([x]) => { b.rect(x, 14, 5, 2, '#7a4630'); b.rect(x + 1, 16, 3, 2, '#6b3d24'); });
+    // evergreen swag along the mantel edge
+    for (let x = 1; x < FW - 1; x++) {
+      const s = (x % 14) / 14, y = MANTEL_Y + 3 + Math.round(Math.sin(Math.PI * s) * 3);
+      b.set(x, y, (x * 7) % 5 === 0 ? '#3fa36a' : '#21754c');
+      b.set(x, y + 1, (x * 3) % 4 === 0 ? '#155036' : '#1d6b45');
+    }
+    // stockings
+    const stocking = (ox, body, mark, markCol) => b.map([
+      'cccccc....', 'cCcccc....', 'cccccc....', '.pppp.....', '.p' + mark + 'pp.....', '.pppp.....', '.pppp.....', '.pppp.....',
+      '.ppppp....', '.pppppp...', '.ppppppp..', '.pppppppp.', '..ppppppp.', '...pppp...'
+    ], { c: '#fff4e2', C: '#e2d3ff', p: body, h: markCol, s: markCol }, ox, 15);
+    stocking(8, '#8e5bd6', 'h', '#ff6fb5');
+    stocking(65, '#d6334d', 's', '#ffd45a');
+    b.set(10, 14, '#ffd45a'); b.set(67, 14, '#ffd45a');
+    // candles on the mantel (flames are drawn live)
+    b.rect(9, 3, 3, 7, '#fff4e2'); b.rect(11, 3, 1, 7, '#e2d3ff');
+    b.rect(15, 5, 3, 5, '#fff4e2'); b.rect(17, 5, 1, 5, '#e2d3ff');
+    b.rect(8, 9, 11, 1, '#e0a23a');
+    // a little framed heart
+    b.rect(60, 1, 12, 9, '#ffd45a'); b.rect(61, 2, 10, 7, '#3b1a4c');
+    b.map(['.pp.pp.', 'ppppppp', '.ppppp.', '..ppp..', '...p...'], { p: '#ff6fb5' }, 62, 3);
+    b.outline(OUT);
+    return b.toCanvas();
+  }
+
   // ---- Plane with banner ----
   const BANNER_TEXT = 'Next stop: Toronto';
   function buildPlane() {
@@ -348,7 +423,7 @@
 
   const sprites = {
     tree: buildTree(), ornament: buildOrnament(), arrow: buildArrow(),
-    mug: buildMug(), holly: buildHolly(), plane: buildPlane()
+    mug: buildMug(), holly: buildHolly(), plane: buildPlane(), fireplace: buildFireplace()
   };
 
   /* ======================================================================
@@ -483,27 +558,6 @@
       g.fillStyle = c; g.fillRect(rx + x, ry + y, 1, 1);
     }
 
-    // side table for the hot chocolate
-    if (L.table) {
-      const tb = L.table, cx = tb.x + Math.floor(tb.w / 2);
-      g.fillStyle = OUT;
-      g.fillRect(tb.x - 1, tb.y - 1, tb.w + 2, 6);
-      g.fillRect(cx - 3, tb.y + 4, 6, tb.foot - tb.y - 4);
-      g.fillRect(cx - 10, tb.foot - 2, 20, 3);
-      g.fillStyle = '#7a4630'; g.fillRect(tb.x, tb.y, tb.w, 4);
-      g.fillStyle = '#94593d'; g.fillRect(tb.x, tb.y, tb.w, 1);
-      g.fillStyle = '#5e3322'; g.fillRect(tb.x, tb.y + 3, tb.w, 1);
-      g.fillStyle = '#6b3d24'; g.fillRect(cx - 2, tb.y + 4, 4, tb.foot - tb.y - 6);
-      g.fillStyle = '#8a5434'; g.fillRect(cx - 2, tb.y + 4, 1, tb.foot - tb.y - 6);
-      g.fillStyle = '#7a4630'; g.fillRect(cx - 9, tb.foot - 1, 18, 1);
-      // lace doily
-      for (let x = tb.x + 3; x < tb.x + tb.w - 3; x++) {
-        g.fillStyle = x % 2 ? '#e2d3ff' : '#fff6e6';
-        g.fillRect(x, tb.y + 3, 1, 1);
-        if (x % 3 === 0) g.fillRect(x, tb.y + 4, 1, 1);
-      }
-    }
-
     // window frame
     g.fillStyle = '#1e0b2a'; g.fillRect(win.x - 1, win.y - 1, win.w + 2, win.h + 2);
     g.fillStyle = '#efe3cf'; g.fillRect(win.x, win.y, win.w, win.h);
@@ -566,53 +620,82 @@
   function layout() {
     const vw = el.root.clientWidth, vh = window.innerHeight;
     const portrait = vw < 760 || vw / vh < 1;
-    let signW, signLeft, signTop, signH, treeLeft, treeTop, sceneH;
+    const setS = (s) => { S = s; el.root.style.setProperty('--s', s + 'px'); };
+    const measureSign = (w) => { el.sign.style.width = w + 'px'; return el.sign.offsetHeight; };
+    let signW, signLeft, signTop, signH, treeLeft, treeTop, sceneH, fpLeft, fpTop, mugLeft, mugTop;
 
     if (!portrait) {
-      S = 2;
-      for (let s = 8; s >= 2; s--) if (TH * s <= vh * 0.76 && TW * s <= vw * 0.36) { S = s; break; }
-      el.root.style.setProperty('--s', S + 'px');
-      treeLeft = snap(Math.min(vw * 0.69 - (TW * S) / 2, vw - TW * S - 24));
-      signLeft = snap(Math.max(20, vw * 0.05));
-      signW = snap(Math.min(600, Math.max(300, vw * 0.36), treeLeft - signLeft - 28));
-      el.sign.style.width = signW + 'px';
-      signH = el.sign.offsetHeight;
-      sceneH = Math.max(vh, signH + 120, TH * S + 70);
-      treeTop = snap(sceneH - Math.round(sceneH * 0.035) - TH * S);
+      // Sign hangs over the mantel on the left; the tree stands by the window on the right.
+      const plan = (s) => {
+        setS(s);
+        const tLeft = snap(Math.min(vw * 0.69 - (TW * s) / 2, vw - TW * s - 24));
+        const sLeft = snap(Math.max(20, vw * 0.05));
+        const sW = snap(Math.min(600, Math.max(300, vw * 0.36), tLeft - sLeft - 28));
+        const sH = measureSign(sW);
+        // height needed so the sign clears the mantel candles
+        const need = Math.ceil((36 + sH + 3 * s + (TH - 130 + FH) * s) / 0.97);
+        return { tLeft, sLeft, sW, sH, need, fits: FW * s <= tLeft - 24 && need <= vh };
+      };
+      let p = null;
+      for (let s = 8; s >= 2 && !p; s--) {
+        if (TH * s > vh * 0.76 || TW * s > vw * 0.36) continue;
+        const q = plan(s);
+        if (q.fits) p = q;
+      }
+      if (!p) p = plan(2);
+      treeLeft = p.tLeft; signLeft = p.sLeft; signW = p.sW; signH = p.sH;
+      sceneH = Math.max(vh, p.need, TH * S + 70);
+      treeTop = snap(sceneH - Math.round(sceneH * 0.03) - TH * S);
       const floorCss = treeTop + 124 * S;
-      signTop = snap(Math.max(40, (floorCss - signH) / 2 - sceneH * 0.03));
+      fpTop = floorCss + (6 - FH) * S;
+      const signMid = signLeft + signW / 2;
+      fpLeft = snap(Math.max(8, Math.min(signMid - (FW * S) / 2, treeLeft - FW * S - 12)));
+      signTop = snap(Math.max(32, Math.min((fpTop - signH) / 2, fpTop - 3 * S - signH)));
+      mugLeft = snap(Math.max(8, vw * 0.025));
+      mugTop = sceneH - MH * S - snap(8);
     } else {
+      // Sign on top; fireplace bottom-left with the mug on its mantel; tree on the right.
       const maxSignW = Math.min(vw - 24, 540);
-      el.sign.style.width = maxSignW + 'px';
-      el.root.style.setProperty('--s', '2px');
-      signH = el.sign.offsetHeight;
-      S = 2;
-      for (let s = 6; s >= 2; s--) if (TW * s <= vw * 0.9 && 36 + signH + 26 + TH * s + 10 <= vh) { S = s; break; }
-      el.root.style.setProperty('--s', S + 'px');
+      setS(2);
+      signH = measureSign(maxSignW);
+      let s = 2;
+      for (let k = 6; k >= 2; k--) {
+        if (TW * k <= vw * 0.6 && FW * k <= vw * 0.5 && 36 + signH + 26 + TH * k + 10 <= vh) { s = k; break; }
+      }
+      setS(s);
       signW = snap(maxSignW);
-      el.sign.style.width = signW + 'px';
-      signH = el.sign.offsetHeight;
+      signH = measureSign(signW);
       signLeft = snap((vw - signW) / 2);
       signTop = snap(36);
       sceneH = Math.max(vh, signTop + signH + 26 + TH * S + 10);
-      treeTop = snap(sceneH - 10 - TH * S);
-      treeLeft = snap((vw - TW * S) / 2);
+      const place = () => {
+        treeTop = snap(sceneH - 10 - TH * S);
+        treeLeft = snap(vw - TW * S - Math.max(4, vw * 0.02));
+        fpTop = treeTop + (124 + 6 - FH) * S;
+        fpLeft = snap(Math.max(4, vw * 0.02));
+        mugLeft = fpLeft + (FW - MW + 1) * S;
+        mugTop = fpTop + (MANTEL_Y - MH + 1) * S;
+      };
+      place();
+      const clash = signTop + signH + 6 - (mugTop + MUG_TOP * S);
+      if (clash > 0) { sceneH += snap(clash + S); place(); }
     }
 
     // logical (art pixel) coordinates
     const W = Math.ceil(vw / S), H = Math.ceil(sceneH / S);
     const tl = Math.round(treeLeft / S), tt = Math.round(treeTop / S);
+    const fl = Math.round(fpLeft / S), ft = Math.round(fpTop / S);
     const floorY = tt + 124;
     const signL = { x: Math.round(signLeft / S), y: Math.round(signTop / S), w: Math.round(signW / S), h: Math.ceil(signH / S) };
     let win;
     if (!portrait) {
-      const wx = signL.x + signL.w + Math.max(6, Math.round(W * 0.03));
+      const wx = Math.max(signL.x + signL.w, fl + FW) + Math.max(6, Math.round(W * 0.03));
       const wr = W - Math.max(5, Math.round(W * 0.035));
       const wy = Math.max(8, Math.round(H * 0.08));
       win = { x: wx, y: wy, w: Math.max(40, wr - wx), h: Math.max(30, floorY - 26 - wy) };
     } else {
       const wy = signL.y + Math.round(signL.h * 0.45);
-      win = { x: Math.round(W * 0.05), y: wy, w: Math.round(W * 0.9), h: Math.max(30, floorY - 24 - wy) };
+      win = { x: Math.round(W * 0.05), y: wy, w: Math.round(W * 0.9), h: Math.max(30, Math.min(floorY - 24, ft - 6) - wy) };
     }
     const F = 3;
     const glass = { x: win.x + F, y: win.y + F, w: win.w - F * 2, h: win.h - F * 2 };
@@ -627,15 +710,9 @@
     const planeTop = portrait ? Math.max(glass.y + 3, signL.y + signL.h + 3) : glass.y + 6;
     L = {
       W, H, portrait, win, glass, floorY, tower, planeY: planeTop,
+      fire: { x: fl + FB.x + FB.w / 2, y: ft + FH + 1, rx: Math.round(FW * 0.55) },
       rug: { x: tl + TCX, y: Math.min(H - 4, tt + 140), rx: Math.round(TW * 0.62), ry: Math.max(5, Math.min(14, H - (tt + 140) - 1)) }
     };
-    // In landscape the mug sits on a little side table, if there is room under the sign.
-    if (!portrait) {
-      const mx = Math.round(Math.max(12, vw * 0.04) / S);
-      const top = Math.min(H - 22, Math.max(floorY + 4, H - 30));
-      const mugCupTop = top - (MH - MUG_TOP);   // steam may drift past the sign; the cup may not
-      if (mugCupTop > signL.y + signL.h + 1) L.table = { x: mx - 4, y: top, w: MW + 8, foot: H - 3 };
-    }
     buildBackground();
 
     // apply sizes
@@ -644,6 +721,10 @@
     el.sign.style.left = signLeft + 'px';
     el.sign.style.top = signTop + 'px';
     el.sign.style.setProperty('--rope', signTop + 'px');
+
+    sizeCanvas(el.fire, FW, FH);
+    el.fire.style.left = fpLeft + 'px';
+    el.fire.style.top = fpTop + 'px';
 
     el.tree.style.left = treeLeft + 'px';
     el.tree.style.top = treeTop + 'px';
@@ -665,10 +746,8 @@
     el.hint.style.top = (arrowMidY - Math.round(sprites.arrow.height / 2) * S) + 'px';
 
     sizeCanvas(el.mug, MW, MH);
-    const mugLeft = portrait ? snap(Math.max(4, treeLeft - MW * S * 0.35)) : snap(Math.max(12, vw * 0.04));
     el.mug.style.left = mugLeft + 'px';
-    el.mug.style.top = (sceneH - MH * S - snap(portrait ? 4 : 10)) + 'px';
-    if (L.table) el.mug.style.top = (L.table.y - (MH - 1)) * S + 'px';
+    el.mug.style.top = mugTop + 'px';
 
     sizeCanvas(el.signLights, signL.w, 8);
     el.signLights.style.top = -4 * S + 'px';
@@ -738,6 +817,19 @@
       if (on) { g.fillStyle = rgba(b.col, 0.35); g.fillRect(b.x - 1, b.y, 3, 2); }
     }
 
+    // warm firelight spilling onto the floor
+    if (L.fire) {
+      const fl = L.fire, a = still ? 0.6 : 0.5 + 0.18 * Math.sin(tm * 7) + 0.1 * Math.sin(tm * 13.7);
+      for (let y = fl.y - 2; y < Math.min(L.H, fl.y + 14); y++) for (let x = fl.x - fl.rx; x <= fl.x + fl.rx; x++) {
+        const d = ((x - fl.x) / fl.rx) ** 2 + ((y - fl.y) / 14) ** 2;
+        if (d > 1 || y < L.floorY) continue;
+        if ((1 - d) * a * 16 > BAYER[y % 4][(x + 64) % 4] + 0.5) {
+          g.fillStyle = 'rgba(255,160,80,0.22)'; g.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+    drawFireplace(tm, still);
     drawTree(tm, still);
     drawSparkles(tm, still);
     drawMug(tm, still);
@@ -791,6 +883,72 @@
       } else {
         g.fillStyle = l.dim; g.fillRect(l.x, l.y, 1, 1);
       }
+    }
+  }
+
+  function hash2(x, y) {
+    let h = (x * 374761393 + y * 668265263) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  }
+
+  function drawFireplace(t, still) {
+    const g = el.fire.getContext('2d');
+    g.clearRect(0, 0, FW, FH);
+    g.drawImage(sprites.fireplace, 0, 0);
+    const tt = still ? 0.6 : t;
+    const q = Math.floor(tt * 12);
+    const cx = FB.x + FB.w / 2, half = 15;
+    // the back of the firebox warms up and flickers
+    g.fillStyle = `rgba(255,130,60,${(still ? 0.2 : 0.16 + 0.07 * Math.sin(tt * 9)).toFixed(3)})`;
+    for (let y = FB.y + 6; y < FIRE_BASE + 2; y++) {
+      const w = Math.round((y - FB.y) * 0.9);
+      g.fillRect(Math.max(FB.x + 3, cx - w), y, Math.min(FB.w - 6, w * 2), 1);
+    }
+    // flames: each column gets its own flickering height
+    for (let x = Math.floor(cx - half); x < cx + half; x++) {
+      const k = 1 - Math.abs(x + 0.5 - cx) / half;
+      if (k <= 0) continue;
+      const n = Math.sin(x * 1.3 + tt * 9) * 0.5 + Math.sin(x * 0.55 - tt * 6.1) * 0.5;
+      const h = Math.round((5 + 17 * Math.pow(k, 0.8)) * (0.78 + 0.16 * n + 0.12 * hash2(x, q)));
+      for (let j = 0; j < h; j++) {
+        const f = j / h;
+        g.fillStyle = f < 0.22 ? '#fff3b0' : f < 0.48 ? '#ffd45a' : f < 0.74 ? '#ff9a3c' : f < 0.93 ? '#ff5a3c' : '#c95bd6';
+        g.fillRect(x, FIRE_BASE - j, 1, 1);
+      }
+    }
+    // rising embers
+    if (!still) {
+      for (let i = 0; i < 4; i++) {
+        const life = (tt * 0.9 + i * 0.27) % 1;
+        const y = Math.round(FIRE_BASE - 16 - life * 14);
+        const x = Math.round(cx + Math.sin(tt * 2 + i * 2.3) * 7 + (i - 1.5) * 3);
+        g.fillStyle = life < 0.6 ? '#ffd45a' : '#ff8a5c';
+        if (y > FB.y + 6) g.fillRect(x, y, 1, 1);
+      }
+    }
+    // front log in front of the flames
+    g.fillStyle = OUT; g.fillRect(FB.x + 5, FIRE_BASE - 1, FB.w - 10, 5);
+    g.fillStyle = '#6b3d24'; g.fillRect(FB.x + 6, FIRE_BASE, FB.w - 12, 3);
+    g.fillStyle = '#8a5434'; g.fillRect(FB.x + 6, FIRE_BASE, FB.w - 12, 1);
+    g.fillStyle = '#c8956a'; g.fillRect(FB.x + 6, FIRE_BASE, 2, 3); g.fillRect(FB.x + FB.w - 8, FIRE_BASE, 2, 3);
+    g.fillStyle = '#ff8a5c'; g.fillRect(FB.x + 14, FIRE_BASE + 2, 3, 1); g.fillRect(FB.x + 24, FIRE_BASE + 2, 2, 1);
+    // candle flames
+    [[10, 2], [16, 4]].forEach(([x, y], i) => {
+      const wob = still ? 0 : (hash2(i, Math.floor(tt * 6)) < 0.3 ? 1 : 0);
+      g.fillStyle = '#ff9a3c'; g.fillRect(x, y, 1, 1);
+      g.fillStyle = '#ffd45a'; g.fillRect(x, y - 1, 1, 1);
+      g.fillStyle = '#fff3b0'; g.fillRect(x + wob, y - 2, 1, 1);
+      g.fillStyle = 'rgba(255,212,90,0.25)'; g.fillRect(x - 1, y - 2, 3, 3);
+    });
+    // lights in the mantel swag
+    for (let x = 7, i = 0; x < FW - 3; x += 14, i++) {
+      const col = LED[(i + 2) % LED.length];
+      const on = still || Math.sin(t * 2 + i * 1.7) > -0.45;
+      const y = MANTEL_Y + 3 + Math.round(Math.sin(Math.PI * ((x % 14) / 14)) * 3) + 2;
+      g.fillStyle = on ? col : mix(col, '#1a0f20', 0.55);
+      g.fillRect(x, y, 1, 2);
+      if (on) { g.fillStyle = rgba(col, 0.35); g.fillRect(x - 1, y, 3, 2); }
     }
   }
 
