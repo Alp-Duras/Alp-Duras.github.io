@@ -3,40 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#141119" />
-  <title>Under the Same Moon · See You Soon</title>
+  <meta name="theme-color" content="#2a1035" />
+  <title>Counting down to you, Sofia</title>
+  <meta name="description" content="A little pixel Christmas world counting down to December 19 in Toronto." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect x='3' y='0' width='2' height='1' fill='%23ffd45a'/%3E%3Crect x='2' y='1' width='4' height='1' fill='%238e5bd6'/%3E%3Crect x='1' y='2' width='6' height='4' fill='%238e5bd6'/%3E%3Crect x='2' y='6' width='4' height='1' fill='%238e5bd6'/%3E%3Crect x='2' y='2' width='1' height='2' fill='%23cdb6ff'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="night-sky" aria-hidden="true"><div class="moon"></div><span class="bat bat-one"></span><span class="bat bat-two"></span><span class="bat bat-three"></span><div class="hills"></div></div>
-  <div class="surprise" aria-hidden="true"><div class="surprise-photo"><img src="src/image2.png" alt="" /><span>Boo! Miss you. ♡</span></div></div>
-  <main class="page-shell">
-    <header class="site-header"><a href="#main-title" class="wordmark">☾ &nbsp; Under the same moon</a></header>
-    <section class="countdown-section" aria-labelledby="main-title">
-      <p class="eyebrow"><span></span> Our next chapter · October 10</p>
-      <h1 id="main-title">Every little <em>boo,</em><br />brings me closer <i>to you.</i></h1>
-      <p class="intro">The nights are getting colder.<br class="mobile-break" /> The thought of you still keeps me warm.</p>
-      <div class="countdown" role="timer" aria-label="Time until we are together">
-        <div class="time-box"><span id="days">00</span><small>Days</small></div><b aria-hidden="true">:</b>
-        <div class="time-box"><span id="hours">00</span><small>Hours</small></div><b aria-hidden="true">:</b>
-        <div class="time-box"><span id="minutes">00</span><small>Minutes</small></div><b aria-hidden="true">:</b>
-        <div class="time-box"><span id="seconds">00</span><small>Seconds</small></div>
+  <main class="scene" id="scene">
+    <!-- The room, window, sky, skyline, snow and plane are drawn here. -->
+    <canvas class="layer-bg" id="bg" aria-hidden="true"></canvas>
+
+    <section class="sign" id="sign" aria-labelledby="sign-title">
+      <canvas class="sign-lights" id="sign-lights" aria-hidden="true"></canvas>
+      <div class="sign-face">
+        <h1 id="sign-title">Counting down to you, Sofia</h1>
+        <div class="display" id="display" role="timer" aria-label="Time left until December 19">
+          <div class="unit"><span class="num" id="days">--</span><span class="lbl">days</span></div>
+          <div class="unit"><span class="num" id="hours">--</span><span class="lbl">hours</span></div>
+          <div class="unit"><span class="num" id="minutes">--</span><span class="lbl">minutes</span></div>
+          <div class="unit"><span class="num" id="seconds">--</span><span class="lbl">seconds</span></div>
+        </div>
+        <p class="finale" id="finale" hidden>You’re finally here! 💜</p>
+        <p class="date"><time datetime="2026-12-19T19:00:00-05:00">Saturday, December 19, 2026 at 7:00 PM</time><br />in Toronto</p>
       </div>
-      <p class="reunion-date"><span>✦</span> <time datetime="2026-10-10T11:00:00-03:00">October 10, 2026 · 11:00 AM · Halifax</time> <span>✦</span></p>
-      <p id="reunion-message" class="love-note" aria-live="polite">I love you. See you so very soon.</p>
-      <a class="photo-button" href="src/image.png" target="_blank" rel="noopener"><span>♡</span> A little reminder of us <span>↗</span></a>
+      <canvas class="sign-holly" id="sign-holly" aria-hidden="true"></canvas>
     </section>
-    <section class="bottom-row" aria-label="A note and flight information">
-      <div class="season-note"><span class="little-ghost" aria-hidden="true"><i></i></span><div><p>You're my favorite boo.</p><small>Across the miles. Through every season.</small></div></div>
-      <section class="flight-panel" aria-labelledby="flight-title"><div class="flight-heading"><span aria-hidden="true">✈</span><div><p class="eyebrow">The journey back to you</p><h2 id="flight-title">Flight <span>F8 652</span></h2></div></div></section>
-    </section>
-    <footer><span>Made of moonlight & missing you</span><span>October, come a little quicker. ♡</span></footer>
+
+    <div class="tree" id="tree">
+      <canvas id="tree-canvas" aria-hidden="true"></canvas>
+      <canvas class="sparkles" id="sparkles" aria-hidden="true"></canvas>
+      <button class="ornament" id="ornament" type="button" aria-haspopup="dialog" aria-controls="surprise">
+        <canvas id="ornament-canvas" aria-hidden="true"></canvas>
+        <span class="sr-only">Open your Christmas surprise</span>
+      </button>
+    </div>
+
+    <div class="hint" id="hint" aria-hidden="true">
+      <span class="hint-text">Click me!</span>
+      <canvas id="arrow-canvas"></canvas>
+    </div>
+
+    <canvas class="mug" id="mug" aria-hidden="true"></canvas>
   </main>
-  <div class="pumpkin-patch" aria-hidden="true"><div class="pumpkin"><i></i><b></b></div><div class="pumpkin small"><i></i><b></b></div><div class="grass"></div></div>
+
+  <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+
+  <dialog class="gift" id="surprise" aria-labelledby="gift-title">
+    <div class="gift-box">
+      <button class="gift-close" id="gift-close" type="button" aria-label="Close surprise">✕</button>
+      <figure class="gift-photo">
+        <img src="src/clickable.jpg" width="1200" height="1600" alt="Sofia smiling in sunglasses on a sunny drive" decoding="async" />
+      </figure>
+      <p class="gift-title" id="gift-title">A little Christmas surprise for you 💜</p>
+      <a class="play" href="game.html">Play Sofia’s Christmas Run →</a>
+    </div>
+  </dialog>
+
+  <script src="pixel.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
-
