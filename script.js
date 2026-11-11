@@ -25,7 +25,8 @@
     signLights: $('sign-lights'), holly: $('sign-holly'), display: $('display'), finale: $('finale'),
     days: $('days'), hours: $('hours'), minutes: $('minutes'), seconds: $('seconds'),
     tree: $('tree'), treeCanvas: $('tree-canvas'), sparkles: $('sparkles'), ornament: $('ornament'),
-    ornamentCanvas: $('ornament-canvas'), hint: $('hint'), fire: $('fireplace'), arrow: $('arrow-canvas'), mug: $('mug'),
+    ornamentCanvas: $('ornament-canvas'), hint: $('hint'), fire: $('fireplace'),
+    chai: $('pet-chai'), sef: $('pet-sef'), flash: $('pet-flash'), petTag: $('pet-tag'), arrow: $('arrow-canvas'), mug: $('mug'),
     fx: $('fx'), dialog: $('surprise'), close: $('gift-close')
   };
 
@@ -391,6 +392,265 @@
     return b.toCanvas();
   }
 
+  // ---- The pets ----
+  const ell = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2;
+
+  // ---- Flash, the dog ----
+  // Two versions to play with. Change FLASH_STYLE to switch:
+  //   'big'      — the full-size Flash as a black goldendoodle, drawn natively at his large size (current)
+  //   'original' — the first, small 1x Flash, kept exactly as he was
+  const FLASH_STYLE = 'big';
+
+  function buildFlash(step, tail, happy) {
+    return FLASH_STYLE === 'original' ? buildFlashOriginal(step, tail, happy) : buildFlashBig(step, tail, happy);
+  }
+
+  // The first 1x Flash, saved as-is.
+  function buildFlashOriginal(step, tail, happy) {
+    const b = new Buf(42, 30);
+    const D = { k: '#120d18', d: '#1d1726', m: '#2b2436', l: '#3d354b', g: '#6f6880', t: '#a08c74', sheen: '#58506a' };
+    const fur = (x, y) => {
+      const h = hash2(x * 3 + 11, y * 7 + 5);
+      return h < 0.2 ? D.l : h < 0.58 ? D.m : h < 0.88 ? D.d : D.k;
+    };
+    const legs = [[11, 2, true], [14, 0, false], [26, 0, true], [29, 2, false]];
+    for (const [lx, p, far] of legs) {
+      const swing = step < 0 ? 0 : [-2, 0, 2, 0][(step + p) % 4];
+      for (let y = 19; y < 27; y++) {
+        const x0 = lx + Math.round((swing * (y - 19)) / 7);
+        for (let i = 0; i < 3; i++) b.set(x0 + i, y, far ? (hash2(x0 + i, y) < 0.3 ? D.d : D.k) : fur(x0 + i, y));
+      }
+      b.rect(lx + swing, 27, 4, 1, far ? D.k : D.d);
+    }
+    for (let y = 0; y < 30; y++) for (let x = 0; x < 42; x++) {
+      const j = (hash2(x, y + 40) - 0.5) * 0.22;
+      if (ell(x, y, 18, 15, 12, 6.5) <= 1 + j || ell(x, y, 27, 13, 5, 7) <= 1 + j || ell(x, y, 31, 8, 5.5, 5) <= 1 + j) b.set(x, y, fur(x, y));
+    }
+    for (let i = 0; i < 8; i++) {
+      const x = Math.round(7 - i * 0.6 + tail * i * 0.35), y = Math.round(12 - i * 1.05);
+      b.set(x, y, fur(x, y)); b.set(x + 1, y, fur(x + 1, y)); if (i > 5) b.set(x, y, D.l);
+    }
+    for (let y = 7; y < 16; y++) for (let x = 32; x < 41; x++) {
+      const inSnout = ell(x, y, 36, 10, 3.6, 2.6) <= 1;
+      const inBeard = y >= 11 && y <= 14 + (x % 2) && x >= 33 && x <= 38 - (y > 13 ? 1 : 0);
+      if (!inSnout && !inBeard) continue;
+      const h = hash2(x * 5, y * 3);
+      b.set(x, y, h < 0.32 ? D.g : h < 0.52 ? D.t : h < 0.8 ? D.m : D.d);
+    }
+    for (let y = 4; y < 17; y++) for (let x = 25; x < 32; x++) {
+      if (ell(x, y, 28.5, 10, 2.4, 5.2) <= 1) b.set(x, y, hash2(x, y * 9) < 0.35 ? D.m : D.d);
+    }
+    const snap = b.px.slice();
+    for (let y = 1; y < 30; y++) for (let x = 0; x < 42; x++) {
+      if (snap[y * 42 + x] && !snap[(y - 1) * 42 + x] && y < 22) b.set(x, y, hash2(x, y) < 0.5 ? D.sheen : D.g);
+    }
+    b.set(31, 5, D.g); b.set(32, 5, D.l); b.set(33, 6, D.g); b.set(34, 6, D.l);
+    b.set(33, 8, '#05030a'); b.set(32, 8, D.k); b.set(34, 7, D.g);
+    b.set(39, 9, '#05030a'); b.set(40, 9, '#05030a'); b.set(39, 10, '#05030a'); b.set(40, 10, '#05030a'); b.set(39, 9, '#4a4058');
+    if (happy) { b.set(37, 13, '#ff7a9a'); b.set(37, 14, '#ff7a9a'); b.set(38, 13, '#e0587c'); }
+    const B = { b: '#2f6fd6', l: '#6aa6ff', d: '#1f4a9a', w: '#e8f0ff' };
+    b.rect(25, 11, 7, 2, B.b); b.rect(25, 11, 7, 1, B.l);
+    b.rect(25, 13, 6, 1, B.b); b.rect(26, 14, 4, 1, B.b); b.rect(27, 15, 2, 1, B.b); b.set(27, 16, B.d);
+    b.set(30, 13, B.d); b.set(29, 14, B.d); b.set(26, 13, B.w); b.set(28, 14, B.w); b.set(29, 12, B.w);
+    b.outline('#06030a');
+    return b.toCanvas();
+  }
+
+  // The big Flash: a black goldendoodle. Shapes are described on a small design grid but
+  // drawn pixel by pixel at full size, so curls and the outline stay one art pixel wide.
+  // Doodle traits: round teddy-bear head, long heavy ears, short bearded muzzle,
+  // dense curls, fluffy legs with pom paws, and a feathery plume tail.
+  const FLASH_K = 2;            // design units -> art pixels
+  function buildFlashBig(step, tail, happy) {
+    const K = FLASH_K, DW = 54, DH = 38;
+    const W = Math.ceil(DW * K) + 2, H = Math.ceil(DH * K) + 2;
+    const b = new Buf(W, H);
+    const D = { k: '#0f0b13', d: '#19131f', m: '#251d2d', l: '#352b3f', glint: '#4c4158', warm: '#4a3a34', sheen: '#5a5070' };
+    const B = { b: '#8fb8ee', l: '#c4dcff', d: '#3b5fb0', w: '#ffffff' };
+    const E = (u, v, cx, cy, rx, ry) => ((u - cx) / rx) ** 2 + ((v - cy) / ry) ** 2;
+    const swingOf = (p) => (step < 0 ? 0 : [-2.4, 0, 2.4, 0][(step + p) % 4]);
+
+    // thick fluffy legs that end in round pom paws
+    const LEG_TOP = 19, GROUND = 36;
+    const inLeg = (u, v, lx, p, jit) => {
+      if (v < LEG_TOP || v > GROUND) return false;
+      const k = (v - LEG_TOP) / (GROUND - LEG_TOP);
+      const cx = lx + swingOf(p) * k;
+      if (v > GROUND - 2.4) return E(u, v, cx + 0.5, GROUND - 1.2, 2.9 + jit * 0.5, 1.3) <= 1;   // pom paw
+      return Math.abs(u - cx) <= 2.9 - 0.5 * k + jit;
+    };
+    // feathery plume tail, curling up over the back
+    const tailPts = [];
+    for (let s = 0; s <= 1.0001; s += 0.04) {
+      tailPts.push([8 - 4.4 * s + tail * 1.8 * s + 6 * s * s * s, 14 - 12 * s + 4.2 * s * s, 2.5 - 0.8 * s]);
+    }
+    const inTail = (u, v, jit) => tailPts.some(([tx, ty, r]) => (u - tx) ** 2 + (v - ty) ** 2 <= (r + jit) ** 2);
+
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const u = (x - 1 + 0.5) / K, v = (y - 1 + 0.5) / K;
+      const j = (hash2(x * 2 + 7, y * 3 + 1) - 0.5) * 0.2;     // curly edges
+      const jl = (hash2(x + 5, y * 5) - 0.5) * 0.9;            // shaggier edges on legs and tail
+      let c = null;
+
+      if (inLeg(u, v, 10, 2, jl) || inLeg(u, v, 31, 0, jl)) c = 'K';    // far legs
+      if (inTail(u, v, jl)) c = 'F';
+
+      const torso = E(u, v, 21, 16, 12.5, 6.6) <= 1 + j;
+      const rump = E(u, v, 10.5, 15.5, 5.6, 6.2) <= 1 + j;
+      const thigh = E(u, v, 13, 19.5, 5, 4.8) <= 1 + j;
+      const belly = u > 14 && u < 31 && v > 19 && v < 22.6 + (hash2(x, 9) - 0.5) * 1.8;   // fluffy fringe under the belly
+      const chest = E(u, v, 32, 17, 6.2, 7.6) <= 1 + j;
+      const neck = E(u, v, 35.5, 12, 4.6, 5.6) <= 1 + j;
+      const head = E(u, v, 39.5, 8.6, 7.4, 7) <= 1 + j * 1.8;              // round teddy-bear dome
+      if (torso || rump || thigh || belly || chest || neck || head) c = 'F';
+
+      if (inLeg(u, v, 14.5, 0, jl) || inLeg(u, v, 34.5, 2, jl)) c = 'F';   // near legs
+
+      // short, fluffy, bearded muzzle
+      const muzzle = E(u, v, 46, 11.6, 4.4, 3.5) <= 1 + j * 1.5;
+      const beard = u > 41.5 && u < 49 && v > 12 && v < 16.2 + (hash2(x, 5) - 0.5) * 1.6 - Math.max(0, u - 47) * 0.9;
+      if (muzzle || beard) c = 'M';
+
+      // long heavy ear, hanging from the side of the head
+      const ear = E(u, v, 37.2, 12.4, 3.4, 6.6) <= 1 + j * 1.6;
+      if (ear) c = 'E';
+
+      // light-blue bandana wrapped around the neck, under the ear
+      const along = (u - 34.4) * 0.66 - (v - 15.6) * 0.75;
+      if ((chest || neck) && Math.abs(along) <= 1.5 && !(ear && v < 16.5)) c = along > 0.9 ? 'bl' : along < -0.95 ? 'bd' : 'bb';
+
+      if (c) b.set(x, y, c);
+    }
+
+    // turn the shape tokens into curly black fur
+    const snap = b.px.slice();
+    const tok = (x, y) => (x < 0 || y < 0 || x >= W || y >= H ? null : snap[y * W + x]);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const c = tok(x, y);
+      if (!c) continue;
+      const curl = hash2(Math.floor(x / 2) + 31, Math.floor(y / 2) + 17);      // curls come in little clumps
+      const h = hash2(x * 3 + 11, y * 7 + 5) * 0.45 + curl * 0.55;
+      let col;
+      if (c === 'F') col = h < 0.12 ? D.glint : h < 0.3 ? D.l : h < 0.62 ? D.m : h < 0.88 ? D.d : D.k;
+      else if (c === 'K') col = h < 0.3 ? D.d : D.k;
+      else if (c === 'E') {
+        // the ear's edge catches a little light so it reads against the head
+        const edge = tok(x - 1, y) !== 'E' || tok(x + 1, y) !== 'E';
+        col = edge ? (h < 0.55 ? D.sheen : D.glint) : (h < 0.25 ? D.l : h < 0.7 ? D.d : D.k);
+      }
+      else if (c === 'M') col = h < 0.08 ? D.warm : h < 0.2 ? D.glint : h < 0.55 ? D.m : D.d;
+      else if (c === 'bb') col = ((x * 5 + y * 3) % 11 === 0) ? B.w : B.b;
+      else if (c === 'bl') col = B.l;
+      else col = B.d;
+      if ((c === 'F' || c === 'E') && !tok(x, y - 1) && y < 24 * K) col = curl < 0.5 ? D.sheen : D.glint;
+      b.set(x, y, col);
+    }
+
+    // face: eye under a fluffy brow, big nose, tongue when happy
+    const P = (u, v, w, h, col) => b.rect(Math.round(u * K) + 1, Math.round(v * K) + 1, w, h, col);
+    P(40.6, 5.6, 4, 1, D.glint); P(41.6, 5.2, 2, 1, D.sheen);              // brow fluff
+    P(41.4, 6.8, 3, 2, '#05030a'); P(41.4, 6.8, 1, 1, '#ece4f4');            // eye with a glint
+    P(48.6, 9.2, 4, 3, '#05030a'); P(49.1, 9.2, 2, 1, '#4e4458');            // nose
+    P(45.5, 13.6, 5, 1, '#05030a');                                          // mouth
+    if (happy) { P(46.2, 14, 3, 4, '#ff7a9a'); P(46.7, 15.4, 2, 1, '#e0587c'); }
+    b.outline('#06030a');
+    return b.toCanvas();
+  }
+
+  // Chai: a round black British Shorthair loaf with folded ears and big yellow-green eyes.
+  function buildChai(blink, tailUp) {
+    const W2 = 31, H2 = 24, ox = 1, oy = 1;
+    const b = new Buf(W2, H2);
+    const C = { k: '#0f0b14', d: '#1c1623', m: '#28202f', l: '#3a3045', s: '#5e5270', g: '#8a8094' };
+    const fur = (x, y) => { const h = hash2(x * 7, y * 13); return h < 0.15 ? C.l : h < 0.62 ? C.m : C.d; };
+    const set = (x, y, c) => b.set(x + ox, y + oy, c);
+    const head = (x, y) => ell(x, y, 14, 8, 8, 6.8) <= 1;
+    for (let y = 0; y < 22; y++) for (let x = 0; x < 29; x++) {
+      if (ell(x, y, 14, 16, 12.5, 5.5) <= 1) set(x, y, fur(x, y));
+    }
+    // shadow under the chin so the round head sits on the body
+    for (let x = 0; x < 29; x++) for (let y = 10; y < 18; y++) if (!head(x, y) && head(x, y - 1)) { set(x, y, C.k); set(x, y + 1, C.d); }
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 29; x++) if (head(x, y)) set(x, y, fur(x, y));
+    // tail curled along the front, tip twitching
+    for (let x = 17; x < 26; x++) set(x, 20, C.d);
+    set(25, 19, C.d); set(26, 18, C.d); set(26, tailUp ? 16 : 17, C.l); if (tailUp) set(26, 17, C.d);
+    // folded ears: little rounded caps
+    [[7, 2], [8, 2], [9, 2], [6, 3], [7, 3], [8, 3], [6, 4]].forEach(([x, y]) => set(x, y, C.d));
+    [[19, 2], [20, 2], [21, 2], [20, 3], [21, 3], [22, 3], [22, 4]].forEach(([x, y]) => set(x, y, C.d));
+    set(7, 2, C.s); set(8, 2, C.s); set(20, 2, C.s); set(21, 2, C.s);
+    // front paws
+    b.rect(ox + 8, oy + 19, 5, 2, C.m); b.rect(ox + 16, oy + 19, 5, 2, C.m);
+    set(9, 20, C.s); set(11, 20, C.s); set(17, 20, C.s); set(19, 20, C.s);
+    // sheen on the head and back
+    const snap = b.px.slice();
+    for (let y = 1; y < H2; y++) for (let x = 0; x < W2; x++) if (snap[y * W2 + x] && !snap[(y - 1) * W2 + x]) b.set(x, y, C.s);
+    set(10, 3, C.l); set(11, 3, C.l); set(17, 3, C.l); set(18, 3, C.l);
+    // face
+    if (blink) {
+      for (let x = 9; x < 12; x++) set(x, 8, C.g);
+      for (let x = 16; x < 19; x++) set(x, 8, C.g);
+    } else {
+      [[9, '#d4e07a', '#a8bc56'], [16, '#f2d05a', '#c8a032']].forEach(([x, top, bot]) => {
+        set(x, 7, top); set(x + 1, 7, '#0a0810'); set(x + 2, 7, top);
+        set(x, 8, top); set(x + 1, 8, '#0a0810'); set(x + 2, 8, bot);
+        set(x, 9, bot); set(x + 1, 9, '#0a0810'); set(x + 2, 9, bot);
+        set(x, 7, '#fffbe0');
+      });
+    }
+    set(8, 5, C.s); set(9, 5, C.s); set(10, 6, C.s); set(11, 6, C.s);       // grumpy brows
+    set(16, 6, C.s); set(17, 6, C.s); set(18, 5, C.s); set(19, 5, C.s);
+    set(13, 11, C.l); set(15, 11, C.l); set(14, 11, '#5a3a4c'); set(14, 12, C.s);
+    set(13, 13, C.s); set(15, 13, C.s); set(14, 14, C.g);
+    [[3, 11], [4, 11], [5, 12], [4, 13], [24, 11], [25, 11], [23, 12], [24, 13]].forEach(([x, y]) => set(x, y, C.g));
+    b.outline('#06030a');
+    return b.toCanvas();
+  }
+
+  // Sef: a fluffy orange Maine Coon, lying down and dozing by the tree (faces right).
+  const SEF_Z = 9;   // rows above the cat for the floating z's
+  function buildSef(awake, breath) {
+    const b = new Buf(36, 25 + SEF_Z), oy = SEF_Z;
+    const O = { o: '#e8913f', s: '#c06a2a', l: '#f6b56a', w: '#fff0dc', p: '#f0a0a0' };
+    const set = (x, y, c) => b.set(x, y + oy, c);
+    const furO = (x, y) => (((x + Math.floor(y / 2)) % 5 === 0 && y < 17) ? O.s : (hash2(x, y) < 0.12 ? O.l : O.o));
+    for (let y = 0; y < 25; y++) for (let x = 0; x < 36; x++) {
+      const j = (hash2(x + 3, y + 9) - 0.5) * 0.2;
+      if (ell(x, y, 14, 15 - breath * 0.5, 12, 6 + breath * 0.5) <= 1 + j) set(x, y, y > 18 ? O.l : furO(x, y));
+    }
+    // head with a fluffy ruff
+    for (let y = 2; y < 18; y++) for (let x = 17; x < 34; x++) {
+      const j = (hash2(x * 2, y) - 0.5) * 0.3;
+      if (ell(x, y, 25.5, 9, 6.2, 5.6) <= 1 + j) set(x, y, hash2(x, y * 3) < 0.15 ? O.l : O.o);
+      if (y >= 12 && ell(x, y, 25.5, 14, 5.2, 3.4) <= 1 + j) set(x, y, hash2(x, y) < 0.3 ? O.l : O.w);
+    }
+    // tufted ears
+    [[21, 1, O.l], [21, 2, O.o], [22, 2, O.o], [20, 3, O.o], [21, 3, O.p], [22, 3, O.o], [23, 3, O.o],
+     [30, 1, O.l], [29, 2, O.o], [30, 2, O.o], [28, 3, O.o], [29, 3, O.p], [30, 3, O.o], [31, 3, O.o]].forEach(([x, y, c]) => set(x, y, c));
+    set(21, 0, O.w); set(30, 0, O.w);
+    // forehead tabby marks
+    set(24, 4, O.s); set(25, 5, O.s); set(26, 4, O.s); set(27, 5, O.s); set(23, 6, O.s); set(28, 6, O.s);
+    // eyes
+    if (awake) {
+      set(22, 9, '#7ad6a0'); set(23, 9, '#1a1010'); set(22, 10, '#3f9a6a'); set(23, 10, '#1a1010');
+      set(28, 9, '#1a1010'); set(29, 9, '#7ad6a0'); set(28, 10, '#1a1010'); set(29, 10, '#3f9a6a');
+    } else {
+      set(21, 9, '#7a3a1a'); set(22, 10, '#7a3a1a'); set(23, 10, '#7a3a1a');
+      set(28, 10, '#7a3a1a'); set(29, 10, '#7a3a1a'); set(30, 9, '#7a3a1a');
+    }
+    // muzzle and nose
+    set(24, 11, O.w); set(26, 11, O.w); set(25, 11, O.p); set(25, 12, O.w); set(24, 12, O.w); set(26, 12, O.w);
+    // paws stretched forward
+    for (let x = 26; x < 34; x++) { set(x, 19, O.o); set(x, 20, x > 31 ? O.l : O.o); }
+    set(33, 19, O.l);
+    // the enormous fluffy tail, wrapped around the front
+    for (let i = 0; i < 22; i++) {
+      const x = 1 + i, y = 17 + Math.round(Math.sin((i / 21) * Math.PI) * 3);
+      for (let k = 0; k < 3; k++) set(x, y + k, i > 18 ? O.w : (i % 4 === 0 ? O.s : (k === 0 ? O.l : O.o)));
+    }
+    b.outline(OUT);
+    return b.toCanvas();
+  }
+
   // ---- Plane with banner ----
   const BANNER_TEXT = 'Next stop: Toronto';
   function buildPlane() {
@@ -423,7 +683,14 @@
 
   const sprites = {
     tree: buildTree(), ornament: buildOrnament(), arrow: buildArrow(),
-    mug: buildMug(), holly: buildHolly(), plane: buildPlane(), fireplace: buildFireplace()
+    mug: buildMug(), holly: buildHolly(), plane: buildPlane(), fireplace: buildFireplace(),
+    flash: {
+      walk: [0, 1, 2, 3].map((s) => buildFlash(s, [-1, 0, 1, 0][s], false)),
+      stand: [buildFlash(-1, -1, false), buildFlash(-1, 1, false)],
+      happy: [buildFlash(-1, -1.5, true), buildFlash(-1, 1.5, true)]
+    },
+    chai: { open: buildChai(false, false), blink: buildChai(true, false), twitch: buildChai(false, true) },
+    sef: { sleep: [buildSef(false, 0), buildSef(false, 1)], awake: buildSef(true, 0) }
   };
 
   /* ======================================================================
@@ -756,7 +1023,34 @@
 
     sizeCanvas(el.fx, Math.ceil(vw / S), Math.ceil(vh / S));
 
+    // pets: Chai warms up by the fire, Sef naps on the rug, Flash wanders in front
+    const dog = sprites.flash.walk[0], chaiC = sprites.chai.open, sefC = sprites.sef.awake;
+    const ml = Math.round(mugLeft / S);
+    if (!portrait) {
+      pets.chai = { x: fl + FB.x + FB.w - 8, bottom: ft + FH + 4 };
+      pets.sef = { x: Math.min(W - sefC.width - 2, tl + TW - 10), bottom: Math.min(H - 4, tt + 151) };
+      pets.dogMin = ml + MW + 2;
+      pets.dogMax = Math.max(pets.dogMin + 20, tl + 6);
+    } else {
+      pets.chai = { x: fl + FB.x + 4, bottom: ft + FH + 4 };
+      pets.sef = { x: win.x + 1, bottom: win.y + win.h + 2 };   // napping on the window sill
+      pets.dogMin = 2;
+      pets.dogMax = Math.max(pets.dogMin + 20, W - dog.width - 2);
+    }
+    pets.dogBottom = H - 1;
+    pets.dogX = Math.min(pets.dogMax, Math.max(pets.dogMin, pets.dogX ?? (pets.dogMin + pets.dogMax) / 2));
+    placePet(el.chai, chaiC, pets.chai.x, pets.chai.bottom);
+    placePet(el.sef, sefC, pets.sef.x, pets.sef.bottom);
+    placePet(el.flash, dog, pets.dogX, pets.dogBottom);
+
     draw(performance.now() / 1000, 0);
+  }
+
+  function placePet(btn, sprite, x, bottom) {
+    const c = btn.firstElementChild;
+    sizeCanvas(c, sprite.width, sprite.height);
+    btn.style.left = Math.round(x) * S + 'px';
+    btn.style.top = (bottom - sprite.height) * S + 'px';
   }
 
   function sizeCanvas(c, w, h) {
@@ -833,6 +1127,7 @@
     drawTree(tm, still);
     drawSparkles(tm, still);
     drawMug(tm, still);
+    drawPets(tm, dt, still);
     drawSignLights(tm, still);
     drawConfetti(dt, still);
   }
@@ -885,6 +1180,94 @@
       }
     }
   }
+
+  /* ---------- pets, every frame ---------- */
+  const pets = { dogX: null, dir: 1, mode: 'walk', timer: 4, walked: 0, happyUntil: 0, sefAwakeUntil: 0, chaiBlinkUntil: 0 };
+
+  function drawPets(t, dt, still) {
+    if (!pets.chai) return;
+    const now = performance.now() / 1000;
+
+    // Chai: blinks now and then, flicks her tail, slow-blinks when greeted
+    const chaiFrame = (now < pets.chaiBlinkUntil || (!still && t % 6.5 < 0.22)) ? sprites.chai.blink
+      : (!still && t % 3.7 < 0.5) ? sprites.chai.twitch : sprites.chai.open;
+    paint(el.chai, chaiFrame);
+
+    // Sef: sleeps and breathes, z's drift up; opens his eyes when greeted
+    const awake = now < pets.sefAwakeUntil;
+    const sefFrame = awake ? sprites.sef.awake : sprites.sef.sleep[still ? 0 : Math.floor(t * 0.8) % 2];
+    const sg = paint(el.sef, sefFrame);
+    if (!awake) {
+      const zs = still ? [0.5] : [0, 0.5];
+      zs.forEach((off) => {
+        const k = still ? 0.5 : (t * 0.35 + off) % 1;
+        const x = 31 + Math.round(k * 1), y = Math.round(5 - k * 5);
+        sg.fillStyle = rgba('#cdb6ff', still ? 0.9 : Math.min(1, (1 - k) * 1.6));
+        sg.fillRect(x, y, 4, 1); sg.fillRect(x + 2, y + 1, 1, 1); sg.fillRect(x + 1, y + 2, 1, 1); sg.fillRect(x, y + 3, 4, 1);
+      });
+    }
+
+    // Flash: trots between the mug and the tree, pausing to wag
+    const happy = now < pets.happyUntil;
+    if (!still && dt > 0 && !happy) {
+      if (pets.mode === 'walk') {
+        pets.dogX += pets.dir * 12 * dt;
+        pets.walked += 12 * dt;
+        if (pets.dogX <= pets.dogMin || pets.dogX >= pets.dogMax) {
+          pets.dogX = Math.min(pets.dogMax, Math.max(pets.dogMin, pets.dogX));
+          pets.dir *= -1; pets.mode = 'pause'; pets.timer = 2.5 + Math.random() * 3;
+        } else if ((pets.timer -= dt) <= 0) {
+          pets.mode = 'pause'; pets.timer = 2 + Math.random() * 3;
+        }
+      } else if ((pets.timer -= dt) <= 0) {
+        pets.mode = 'walk'; pets.timer = 5 + Math.random() * 6;
+        if (Math.random() < 0.35) pets.dir *= -1;
+      }
+    }
+    let dogFrame;
+    if (happy) dogFrame = sprites.flash.happy[Math.floor(now * 8) % 2];
+    else if (still || pets.mode === 'pause') dogFrame = sprites.flash.stand[still ? 0 : Math.floor(t * 2.5) % 2];
+    else dogFrame = sprites.flash.walk[Math.floor(pets.walked / 3) % 4];
+    const hop = happy && Math.floor(now * 4) % 2 ? 1 : 0;
+    el.flash.style.left = Math.round(pets.dogX) * S + 'px';
+    el.flash.style.top = (pets.dogBottom - dogFrame.height - hop) * S + 'px';
+    el.flash.firstElementChild.classList.toggle('flip', pets.dir < 0);
+    paint(el.flash, dogFrame);
+    if (tagFor) positionTag();
+  }
+
+  function paint(btn, sprite) {
+    const g = btn.firstElementChild.getContext('2d');
+    g.clearRect(0, 0, sprite.width, sprite.height);
+    g.drawImage(sprite, 0, 0);
+    return g;
+  }
+
+  // greet a pet: show its name and let it react
+  let tagFor = null, tagTimer = 0;
+  const PET_NAMES = { 'pet-chai': 'Chai', 'pet-sef': 'Sef', 'pet-flash': 'Flash' };
+  function positionTag() {
+    const r = tagFor.getBoundingClientRect(), s = el.scene.getBoundingClientRect();
+    el.petTag.style.left = (r.left - s.left + r.width / 2) + 'px';
+    el.petTag.style.top = (r.top - s.top - el.petTag.offsetHeight - 4 * S) + 'px';
+  }
+  function greet(btn) {
+    const now = performance.now() / 1000;
+    if (btn === el.flash) { pets.happyUntil = now + 2.2; pets.mode = 'pause'; pets.timer = 1.5; }
+    if (btn === el.sef) pets.sefAwakeUntil = now + 2.6;
+    if (btn === el.chai) pets.chaiBlinkUntil = now + 1.1;
+    tagFor = btn;
+    el.petTag.textContent = PET_NAMES[btn.id];
+    el.petTag.classList.remove('show');
+    void el.petTag.offsetWidth;
+    el.petTag.classList.add('show');
+    positionTag();
+    clearTimeout(tagTimer);
+    tagTimer = setTimeout(() => { el.petTag.classList.remove('show'); tagFor = null; }, 2600);
+    if (reduced) draw(0, 0);
+    if (reduced) setTimeout(() => draw(0, 0), 2700);
+  }
+  [el.chai, el.sef, el.flash].forEach((btn) => btn.addEventListener('click', () => greet(btn)));
 
   function hash2(x, y) {
     let h = (x * 374761393 + y * 668265263) | 0;

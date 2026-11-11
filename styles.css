@@ -233,6 +233,52 @@ canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edge
 
 .fireplace { position: absolute; z-index: 2; pointer-events: none; }
 
+/* ---------- Pets ---------- */
+.pet {
+  position: absolute;
+  z-index: 4;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.pet:focus-visible { outline: var(--s) dashed var(--gold); outline-offset: var(--s); }
+.pet canvas.flip { transform: scaleX(-1); }
+#pet-flash { z-index: 5; }
+
+.pet-tag {
+  position: absolute;
+  z-index: 6;
+  margin: 0;
+  padding: calc(var(--s) * 1) calc(var(--s) * 3) calc(var(--s) * 1.5);
+  font-family: var(--display);
+  font-size: max(20px, calc(var(--s) * 7));
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--cream);
+  background: var(--plum-night);
+  box-shadow: 0 0 0 var(--s) var(--lavender), 0 0 0 calc(var(--s) * 2) var(--outline);
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+.pet-tag.show { opacity: 1; visibility: visible; animation: tag-pop .24s steps(2) both; }
+.pet-tag::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: calc(var(--s) * 2);
+  height: calc(var(--s) * 2);
+  margin-left: calc(var(--s) * -1);
+  background: var(--lavender);
+  box-shadow: 0 var(--s) 0 var(--outline);
+}
+@keyframes tag-pop { from { transform: translate(-50%, calc(var(--s) * 2)); } to { transform: translateX(-50%); } }
+
 .mug { position: absolute; z-index: 5; pointer-events: none; }
 
 .fx { position: fixed; inset: 0 auto auto 0; z-index: 6; pointer-events: none; }
